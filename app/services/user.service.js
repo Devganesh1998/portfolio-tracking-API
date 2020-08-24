@@ -1,5 +1,6 @@
 const User = require("../models/user.model");
 const bcrypt = require("bcrypt");
+const portfolioService = require("./trade.service");
 
 exports.createUser = async (name, email, password) => {
   if (await User.isEmailTaken(email)) {
@@ -11,7 +12,8 @@ exports.createUser = async (name, email, password) => {
         console.error(err);
         throw new Error("Hashing failed")
     }
-    user = await User.create({ name, email, hash });
+    const portfolio = await portfolioService.createPortfolio(name);
+    user = await User.create({ name: name, email: email, password: hash, portfolio: portfolio._id });
   });
   return user;
 };

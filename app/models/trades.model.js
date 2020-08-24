@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const portfolioUnitSchema = mongoose.Schema(
+const tradeSchema = mongoose.Schema(
   {
     portfolio: { type: Schema.Types.ObjectId, ref: "Portfolio" },
     ticker_symbol: {
@@ -11,11 +11,11 @@ const portfolioUnitSchema = mongoose.Schema(
         trim: true,
         uppercase: true,
     },
-    average_buy_price: {
+    purchase_price: {
       type: Number,
       required: true,
     },
-    shares: {
+    shares_bought: {
       type: Number,
       required: true,
     }
@@ -25,6 +25,6 @@ const portfolioUnitSchema = mongoose.Schema(
   }
 );
 
-const PortfolioUnit = mongoose.model("PortfolioUnit", portfolioUnitSchema);
+const Trade = mongoose.model("Trade", tradeSchema);
 
-module.exports = PortfolioUnit;
+module.exports = Trade;
