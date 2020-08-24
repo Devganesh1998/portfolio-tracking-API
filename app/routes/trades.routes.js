@@ -13,4 +13,12 @@ router.post(
   tradesController.addTrade
 );
 
+router.put(
+  "/:ticker_symbol",
+  [body("shares").exists().bail().trim()],
+  tradesController.updateTrade
+);
+
+router.delete("/:ticker_symbol", tradesController.deleteTrade);
+
 module.exports = router;
