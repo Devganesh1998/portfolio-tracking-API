@@ -15,9 +15,9 @@ const setCookieJWT = async (res, payload) => {
   res.cookie("smallcaseSessionId", auth_hash, {
     maxAge: expirationSeconds * 1000,
     httpOnly: true,
-    // secure: true,
-    // domain: "devganesh.tech",
-    // sameSite: true,
+    secure: true,
+    domain: "devganesh.tech",
+    sameSite: true,
   });
   return { auth_hash: auth_hash, auth_token: auth_token };
 };
@@ -160,9 +160,9 @@ exports.logout = async (req, res) => {
       res.cookie("smallcaseSessionId", "", {
         maxAge: 0,
         httpOnly: true,
-        // secure: true,
-        // domain: "devganesh.tech",
-        // sameSite: true,
+        secure: true,
+        domain: "devganesh.tech",
+        sameSite: true,
       });
 
       const temp = await redis.delWithPromise(smallcaseSessionId);
