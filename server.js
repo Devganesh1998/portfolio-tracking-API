@@ -3,12 +3,19 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const morgan = require("morgan");
+const cookieParser = require("cookie-parser");
 
 const PORT = process.env.PORT || 6000;
 
 const apiRoutes = require("./app/routes");
+const redis = require("./redisInstance");
+
+redis.client.on("error", function (error) {
+  console.log("An error occurred with redis:" + error);
+});
 
 const app = express();
+app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -32,7 +39,7 @@ app.use("/", apiRoutes);
 
 mongoose.Promise = require("bluebird");
 
-mongoose.set('useCreateIndex', true)
+mongoose.set("useCreateIndex", true);
 mongoose
   .connect(process.env.MONGOURI, {
     useNewUrlParser: true,
