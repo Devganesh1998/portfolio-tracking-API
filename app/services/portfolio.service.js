@@ -13,9 +13,10 @@ exports.fetchPortfolio = async (portfolio_id) => {
       PortfolioUnit.find({ portfolio: portfolio_id }),
       Trade.find({ portfolio: portfolio_id }),
     ]);
-    portfolio.units = portfolioUnits;
-    portfolio.trades = trades;
-    return portfolio;
+    const resData = { portfolio: portfolio };
+    resData.portfolioUnits = portfolioUnits;
+    resData.trades = trades;
+    return resData;
   } catch (error) {
     console.error(error);
     return false;
@@ -24,7 +25,7 @@ exports.fetchPortfolio = async (portfolio_id) => {
 
 exports.fetchHoldings = async (portfolio_id) => {
   try {
-    const [portfolio, portfolioUnits] = await Promise.all([
+    let [portfolio, portfolioUnits] = await Promise.all([
       Portfolio.findById(portfolio_id),
       PortfolioUnit.aggregate([
         { $match: { portfolio: portfolio_id } },
@@ -39,10 +40,12 @@ exports.fetchHoldings = async (portfolio_id) => {
         },
       ]),
     ]);
-    portfolio.units.total_avg_buy_price =
+    const resData = { portfolio: portfolio };
+    portfolioUnits = portfolioUnits[0];
+    resData.portfolioUnits = portfolioUnits;
+    resData.portfolioUnits.total_avg_buy_price =
       portfolioUnits.total_amount_invested / portfolioUnits.total_shares;
-    portfolio.units = portfolioUnits;
-    return portfolio;
+    return resData;
   } catch (error) {
     console.error(error);
     return false;
@@ -61,7 +64,7 @@ exports.fetchReturns = async (portfolio_id) => {
             total_return: {
               $sum: {
                 $multiply: [
-                  { $subtract: [150, "$average_buy_price"] },
+                  { $subtract: [100, "$average_buy_price"] },
                   "$shares",
                 ],
               },
@@ -70,8 +73,9 @@ exports.fetchReturns = async (portfolio_id) => {
         },
       ]),
     ]);
-    portfolio.units = portfolioUnits;
-    return portfolio;
+    const resData = { portfolio: portfolio };
+    resData.portfolioUnits = portfolioUnits;
+    return resData;
   } catch (error) {
     console.error(error);
     return false;

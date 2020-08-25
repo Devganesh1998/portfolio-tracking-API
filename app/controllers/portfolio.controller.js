@@ -18,14 +18,17 @@ exports.fetchPortfolio = (req, res) => {
     });
   }
 
-  let resData;
+  const resData = {};
   UserService.getUserByEmail(email)
     .then((user) => {
       resData.user = user;
       return PortfolioService.fetchPortfolio(user.portfolio);
     })
     .then((portfolio) => {
-      resData.portfolio = portfolio;
+      resData = {
+        ...resData,
+        ...portfolio,
+      };
       res.send(resData);
     })
     .catch((err) => {
@@ -49,7 +52,7 @@ exports.fetchHoldings = (req, res) => {
     });
   }
 
-  let resData;
+  const resData = {};
   UserService.getUserByEmail(email)
     .then((user) => {
       resData.user = user;
@@ -80,7 +83,7 @@ exports.fetchReturns = (req, res) => {
     });
   }
 
-  let resData;
+  const resData = {};
   UserService.getUserByEmail(email)
     .then((user) => {
       resData.user = user;
