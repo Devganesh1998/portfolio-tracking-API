@@ -4,7 +4,11 @@ const tradeTypes = require("../config/tradeTypes");
 
 const tradeSchema = mongoose.Schema(
   {
-    portfolio: { type: Schema.Types.ObjectId, ref: "Portfolio" },
+    portfolio: {
+      type: Schema.Types.ObjectId,
+      ref: "Portfolio",
+      required: true,
+    },
     ticker_symbol: {
       type: String,
       required: true,

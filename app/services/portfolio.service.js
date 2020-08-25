@@ -48,3 +48,32 @@ exports.fetchHoldings = async (portfolio_id) => {
     return false;
   }
 };
+
+exports.fetchReturns = async (portfolio_id) => {
+  try {
+    const [portfolio, portfolioUnits] = await Promise.all([
+      Portfolio.findById(portfolio_id),
+      PortfolioUnit.aggregate([
+        { $match: { portfolio: portfolio_id } },
+        {
+          $group: {
+            _id: null,
+            total_return: {
+              $sum: {
+                $multiply: [
+                  { $subtract: [150, "$average_buy_price"] },
+                  "$shares",
+                ],
+              },
+            },
+          },
+        },
+      ]),
+    ]);
+    portfolio.units = portfolioUnits;
+    return portfolio;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};

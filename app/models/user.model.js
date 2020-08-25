@@ -22,7 +22,12 @@ const userSchema = mongoose.Schema(
       trim: true,
       minlength: 8,
     },
-    portfolio: { type: Schema.Types.ObjectId, ref: "Portfolio" },
+    portfolio: {
+      type: Schema.Types.ObjectId,
+      ref: "Portfolio",
+      required: true,
+      unique: true,
+    },
   },
   {
     timestamps: true,

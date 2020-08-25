@@ -40,13 +40,13 @@ const updatePortfolioForSoldSharesDeletion = async (trade, changeInShare) => {
 
 // Updating the portfolio when new trades are bought
 const updatePortfolioForSharesBought = async (
-  portfolio,
+  portfolio_id,
   ticker_symbol,
   shares_bought
 ) => {
   try {
     const portfolioUnit = await PortfolioUnit.find({
-      portfolio: portfolio._id,
+      portfolio: portfolio_id,
       ticker_symbol: ticker_symbol,
     });
     if (!portfolioUnit.length) {
@@ -63,7 +63,7 @@ const updatePortfolioForSharesBought = async (
       });
     } else {
       await PortfolioUnit.create({
-        portfolio: portfolio._id,
+        portfolio: portfolio_id,
         ticker_symbol: ticker_symbol,
         shares: shares_bought,
         average_buy_price: 100,
@@ -78,13 +78,13 @@ const updatePortfolioForSharesBought = async (
 
 // Updating the portfolio when trades are sold
 const updatePortfolioForSharesSold = async (
-  portfolio,
+  portfolio_id,
   ticker_symbol,
   shares_sold
 ) => {
   try {
     const portfolioUnit = await PortfolioUnit.find({
-      portfolio: portfolio._id,
+      portfolio: portfolio_id,
       ticker_symbol: ticker_symbol,
     });
     if (!portfolioUnit.length) {
@@ -103,12 +103,12 @@ const updatePortfolioForSharesSold = async (
   }
 };
 
-exports.addTrade = async (portfolio, ticker_symbol, shares, tradeType) => {
+exports.addTrade = async (portfolio_id, ticker_symbol, shares, tradeType) => {
   try {
     // checking if available Shares is less than requested trade-shares to sell
     if (tradeType === tradeTypes.enum.SELL) {
       const portfolioUnit = await PortfolioUnit.find({
-        portfolio: portfolio._id,
+        portfolio: portfolio_id,
         ticker_symbol: ticker_symbol,
       });
       if (portfolioUnit.shares < shares) {
@@ -116,16 +116,16 @@ exports.addTrade = async (portfolio, ticker_symbol, shares, tradeType) => {
       }
     }
     const trade = await Trade.create({
-      portfolio: portfolio._id,
+      portfolio: portfolio_id,
       ticker_symbol: ticker_symbol,
       price: 100,
       shares: shares,
       type: tradeType,
     });
     if (tradeType === tradeTypes.enum.BUY) {
-      await updatePortfolioForSharesBought(portfolio, ticker_symbol, shares);
+      await updatePortfolioForSharesBought(portfolio_id, ticker_symbol, shares);
     } else if (tradeType === tradeTypes.enum.SELL) {
-      await updatePortfolioForSharesSold(portfolio, ticker_symbol, shares);
+      await updatePortfolioForSharesSold(portfolio_id, ticker_symbol, shares);
     }
     return true;
   } catch (error) {

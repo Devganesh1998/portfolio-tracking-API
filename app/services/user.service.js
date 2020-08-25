@@ -20,9 +20,18 @@ exports.createUser = async (name, email, password) => {
 
 exports.validateUser = async (email, password) => {
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email });
     return user.isPasswordMatch(password);
   } catch (error) {
     console.error(error);
   }
 };
+
+exports.getUserByEmail = async (email) => {
+  try {
+    const user = await User.findOne({email: email});
+    return user;
+  } catch (error) {
+    console.error(error);
+  }
+}
