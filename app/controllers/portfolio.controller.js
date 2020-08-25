@@ -1,24 +1,10 @@
-const { validationResult } = require("express-validator");
-
 const PortfolioService = require("../services/portfolio.service");
 const UserService = require("../services/user.service");
 
 exports.fetchPortfolio = (req, res) => {
-  const email = req.body.email;
+  const email = req.user.email;
 
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({
-      errors: errors.array(),
-      errormsg: "Please send required Details",
-      "Required fields": ["email"],
-      "sample Format": {
-        email: "TestEmail@mail.com",
-      },
-    });
-  }
-
-  const resData = {};
+  let resData = {};
   UserService.getUserByEmail(email)
     .then((user) => {
       resData.user = user;
@@ -38,19 +24,7 @@ exports.fetchPortfolio = (req, res) => {
 };
 
 exports.fetchHoldings = (req, res) => {
-  const email = req.body.email;
-
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({
-      errors: errors.array(),
-      errormsg: "Please send required Details",
-      "Required fields": ["email"],
-      "sample Format": {
-        email: "TestEmail@mail.com",
-      },
-    });
-  }
+  const email = req.user.email;
 
   const resData = {};
   UserService.getUserByEmail(email)
@@ -69,19 +43,7 @@ exports.fetchHoldings = (req, res) => {
 };
 
 exports.fetchReturns = (req, res) => {
-  const email = req.body.email;
-
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({
-      errors: errors.array(),
-      errormsg: "Please send required Details",
-      "Required fields": ["email"],
-      "sample Format": {
-        email: "TestEmail@mail.com",
-      },
-    });
-  }
+  const email = req.user.email;
 
   const resData = {};
   UserService.getUserByEmail(email)

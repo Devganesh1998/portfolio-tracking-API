@@ -1,29 +1,23 @@
 const router = require("express").Router();
-const { body } = require("express-validator");
 
 const portfolioController = require("../controllers/portfolio.controller");
+const protectEndpoint = require("../middlewares/protectEndpoint");
 
-router.post(
-  "/get",
-  [
-    body("email").exists().bail().isEmail().bail().trim(),
-  ],
+router.get(
+  "/",
+  protectEndpoint,
   portfolioController.fetchPortfolio
 );
 
-router.post(
-  "/gethol",
-  [
-    body("email").exists().bail().isEmail().bail().trim(),
-  ],
+router.get(
+  "/holdings",
+  protectEndpoint,
   portfolioController.fetchHoldings
 );
 
-router.post(
-  "/getre",
-  [
-    body("email").exists().bail().isEmail().bail().trim(),
-  ],
+router.get(
+  "/returns",
+  protectEndpoint,
   portfolioController.fetchReturns
 );
 

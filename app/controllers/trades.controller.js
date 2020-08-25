@@ -5,7 +5,7 @@ const UserService = require("../services/user.service");
 const TradeTypes = require("../config/tradeTypes");
 
 exports.addTrade = (req, res) => {
-  const email = req.body.email;
+  const email = req.user.email;
   const ticker_symbol = req.body.ticker_symbol;
   const shares = req.body.shares;
   const price = req.body.price;
@@ -16,15 +16,8 @@ exports.addTrade = (req, res) => {
     return res.status(400).json({
       errors: errors.array(),
       errormsg: "Please send required Details",
-      "Required fields": [
-        "email",
-        "ticker_symbol",
-        "shares",
-        "price",
-        "tradeType",
-      ],
+      "Required fields": ["ticker_symbol", "shares", "price", "tradeType"],
       "sample Format": {
-        email: "TestEmail@mail.com",
         ticker_symbol: "testTicketSymbol",
         shares: 12,
         price: 200,
@@ -74,7 +67,7 @@ exports.addTrade = (req, res) => {
 };
 
 exports.updateTrade = (req, res) => {
-  const email = req.body.email;
+  const email = req.user.email;
   const shares = req.body.shares;
   const trade_id = req.params.trade_id;
 
@@ -83,9 +76,8 @@ exports.updateTrade = (req, res) => {
     return res.status(400).json({
       errors: errors.array(),
       errormsg: "Please send required Details",
-      "Required fields": ["email", "shares"],
+      "Required fields": ["shares"],
       "sample Format": {
-        email: "TestEmail@mail.com",
         shares: 12,
       },
     });
