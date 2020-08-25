@@ -4,101 +4,38 @@ const Trade = require("../models/trades.model");
 
 const tradeTypes = require("../config/tradeTypes");
 
-exports.createPortfolio = async (name) => {
-  return await Portfolio.create({ name });
+const updatePortfolioForBoughtSharesDeletion = async (trade, changeInShare) => {
+  const portfolioUnit = await PortfolioUnit.find({
+    portfolio: trade.portfolio,
+    ticker_symbol: trade.ticker_symbol,
+  });
+  const new_avg_buy_price =
+    (portfolioUnit.average_buy_price * portfolioUnit.shares -
+      100 * changeInShare) /
+      portfolioUnit.shares -
+    changeInShare;
+  await PortfolioUnit.findByIdAndUpdate(portfolioUnit._id, {
+    $set: {
+      average_buy_price: new_avg_buy_price,
+      shares: portfolioUnit.shares - changeInShare,
+    },
+  });
 };
 
-exports.addTrade = async (portfolio, ticker_symbol, shares, tradeType) => {
-  try {
-    // checking if available Shares is less than requested trade-shares to sell
-    if (tradeType === tradeTypes.enum.SELL) {
-      const portfolioUnit = await PortfolioUnit.find({
-        portfolio: portfolio._id,
-        ticker_symbol: ticker_symbol,
-      });
-      if (portfolioUnit.shares < shares) {
-        throw new Error("Not_enough_shares");
-      }
-    }
-    const trade = await Trade.create({
-      portfolio: portfolio._id,
-      ticker_symbol: ticker_symbol,
-      price: 100,
-      shares: shares,
-      type: tradeType,
-    });
-    if (tradeType === tradeTypes.enum.BUY) {
-      await updatePortfolioForSharesBought(
-        portfolio,
-        ticker_symbol,
-        shares
-      );
-    } else if (tradeType === tradeTypes.enum.SELL) {
-      await updatePortfolioForSharesSold(portfolio, ticker_symbol, shares);
-    }
-    return true;
-  } catch (error) {
-    console.error(error);
-    return false;
+const updatePortfolioForSoldSharesDeletion = async (trade, changeInShare) => {
+  const portfolioUnit = await PortfolioUnit.find({
+    portfolio: trade.portfolio,
+    ticker_symbol: trade.ticker_symbol,
+  });
+  // when tries to sell more than shares User has
+  if (portfolioUnit.shares < changeInShare) {
+    throw new Error("Not_enough_shares");
   }
-};
-
-exports.updateTrade = async (trade, newShares) => {
-  try {
-    const changeInShare = newShares - trade.shares;
-    if (trade.type === tradeTypes.enum.BUY) {
-      const resultTrade = await Trade.findByIdAndUpdate(trade._id, {
-        $set: { shares: newShares },
-      });
-      if (changeInShare > 0) {
-        // when the updated share is greater than previous it is similar to placing trades
-        await updatePortfolioForSharesBought(
-          trade.portfolio,
-          trade.ticker_symbol,
-          newShares
-        );
-      } else if (changeInShare < 0) {
-        // when the updated share is smaller than previous it reduces the average buy price
-        const portfolioUnit = await PortfolioUnit.find({
-          portfolio: trade.portfolio,
-          ticker_symbol: trade.ticker_symbol,
-        });
-        const new_avg_buy_price =
-          (portfolioUnit.average_buy_price * portfolioUnit.shares -
-            100 * changeInShare) /
-            portfolioUnit.shares -
-          changeInShare;
-        await PortfolioUnit.findByIdAndUpdate(portfolioUnit._id, {
-          $set: {
-            average_buy_price: new_avg_buy_price,
-            shares: portfolioUnit.shares - changeInShare,
-          },
-        });
-      }
-    } else if (trade.type === tradeTypes.enum.SELL) {
-      const portfolioUnit = await PortfolioUnit.find({
-        portfolio: trade.portfolio,
-        ticker_symbol: trade.ticker_symbol,
-      });
-      // when tries to sell more than shares User has
-      if (portfolioUnit.shares < changeInShare) {
-        throw new Error("Not_enough_shares");
-      }
-      await Trade.findByIdAndUpdate(trade._id, {
-        $set: { shares: newShares },
-      });
-      //using change in share to update the total share of ticker for user, because unchanged shares are already Sold.
-      await PortfolioUnit.findByIdAndUpdate(portfolioUnit._id, {
-        $set: {
-          shares: portfolioUnit.shares - changeInShare,
-        },
-      });
-    }
-    return true;
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
+  await PortfolioUnit.findByIdAndUpdate(portfolioUnit._id, {
+    $set: {
+      shares: portfolioUnit.shares - changeInShare,
+    },
+  });
 };
 
 // Updating the portfolio when new trades are bought
@@ -162,6 +99,84 @@ const updatePortfolioForSharesSold = async (
     return true;
   } catch (error) {
     console.error(error);
+    return false;
+  }
+};
+
+exports.addTrade = async (portfolio, ticker_symbol, shares, tradeType) => {
+  try {
+    // checking if available Shares is less than requested trade-shares to sell
+    if (tradeType === tradeTypes.enum.SELL) {
+      const portfolioUnit = await PortfolioUnit.find({
+        portfolio: portfolio._id,
+        ticker_symbol: ticker_symbol,
+      });
+      if (portfolioUnit.shares < shares) {
+        throw new Error("Not_enough_shares");
+      }
+    }
+    const trade = await Trade.create({
+      portfolio: portfolio._id,
+      ticker_symbol: ticker_symbol,
+      price: 100,
+      shares: shares,
+      type: tradeType,
+    });
+    if (tradeType === tradeTypes.enum.BUY) {
+      await updatePortfolioForSharesBought(portfolio, ticker_symbol, shares);
+    } else if (tradeType === tradeTypes.enum.SELL) {
+      await updatePortfolioForSharesSold(portfolio, ticker_symbol, shares);
+    }
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
+
+exports.updateTrade = async (trade, newShares) => {
+  try {
+    const changeInShare = newShares - trade.shares;
+    if (trade.type === tradeTypes.enum.BUY) {
+      const resultTrade = await Trade.findByIdAndUpdate(trade._id, {
+        $set: { shares: newShares },
+      });
+      if (changeInShare > 0) {
+        // when the updated share is greater than previous it is similar to placing trades
+        await updatePortfolioForSharesBought(
+          trade.portfolio,
+          trade.ticker_symbol,
+          newShares
+        );
+      } else if (changeInShare < 0) {
+        // when the updated share is smaller than previous it reduces the average buy price
+        await updatePortfolioForBoughtSharesDeletion(trade, changeInShare);
+      }
+    } else if (trade.type === tradeTypes.enum.SELL) {
+      //using change in share to update the total share of ticker for user, because unchanged shares are already Sold.
+      await updatePortfolioForSoldSharesDeletion(trade, changeInShare);
+      await Trade.findByIdAndUpdate(trade._id, {
+        $set: { shares: newShares },
+      });
+    }
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
+
+exports.deleteTrade = async (trade) => {
+  try {
+    if (trade.type === tradeTypes.enum.BUY) {
+      await updatePortfolioForBoughtSharesDeletion(trade, trade.shares);
+    } else if (trade.type === tradeTypes.enum.SELL) {
+      await updatePortfolioForSoldSharesDeletion(trade, trade.shares);
+    }
+    await Trade.findByIdAndRemove(trade._id);
+    return true;
+  } catch (err) {
+    console.error(err);
     return false;
   }
 };

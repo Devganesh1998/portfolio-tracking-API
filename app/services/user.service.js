@@ -1,6 +1,6 @@
 const User = require("../models/user.model");
 const bcrypt = require("bcrypt");
-const portfolioService = require("./trade.service");
+const portfolioService = require("./portfolio.service");
 
 exports.createUser = async (name, email, password) => {
   if (await User.isEmailTaken(email)) {
