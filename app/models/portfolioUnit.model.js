@@ -5,11 +5,10 @@ const portfolioUnitSchema = mongoose.Schema(
   {
     portfolio: { type: Schema.Types.ObjectId, ref: "Portfolio" },
     ticker_symbol: {
-        type: String,
-        required: true,
-        index: true,
-        trim: true,
-        uppercase: true,
+      type: String,
+      required: true,
+      trim: true,
+      uppercase: true,
     },
     average_buy_price: {
       type: Number,
@@ -18,12 +17,14 @@ const portfolioUnitSchema = mongoose.Schema(
     shares: {
       type: Number,
       required: true,
-    }
+    },
   },
   {
     timestamps: true,
   }
 );
+
+portfolioUnitSchema.index({ portfolio: 1 });
 
 const PortfolioUnit = mongoose.model("PortfolioUnit", portfolioUnitSchema);
 
