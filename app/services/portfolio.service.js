@@ -22,3 +22,29 @@ exports.fetchPortfolio = async (portfolio_id) => {
   }
 };
 
+exports.fetchHoldings = async (portfolio_id) => {
+  try {
+    const [portfolio, portfolioUnits] = await Promise.all([
+      Portfolio.findById(portfolio_id),
+      PortfolioUnit.aggregate([
+        { $match: { portfolio: portfolio_id } },
+        {
+          $group: {
+            _id: null,
+            total_amount_invested: {
+              $sum: { $multiply: ["$average_buy_price", "$shares"] },
+            },
+            total_shares: { $sum: "$shares" },
+          },
+        },
+      ]),
+    ]);
+    portfolio.units.total_avg_buy_price =
+      portfolioUnits.total_amount_invested / portfolioUnits.total_shares;
+    portfolio.units = portfolioUnits;
+    return portfolio;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+};
