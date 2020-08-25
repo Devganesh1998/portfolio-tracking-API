@@ -8,6 +8,7 @@ exports.addTrade = (req, res) => {
   const email = req.body.email;
   const ticker_symbol = req.body.ticker_symbol;
   const shares = req.body.shares;
+  const price = req.body.price;
   const tradeType = req.body.tradeType;
 
   const errors = validationResult(req);
@@ -15,11 +16,18 @@ exports.addTrade = (req, res) => {
     return res.status(400).json({
       errors: errors.array(),
       errormsg: "Please send required Details",
-      "Required fields": ["email", "ticker_symbol", "shares", "tradeType"],
+      "Required fields": [
+        "email",
+        "ticker_symbol",
+        "shares",
+        "price",
+        "tradeType",
+      ],
       "sample Format": {
         email: "TestEmail@mail.com",
         ticker_symbol: "testTicketSymbol",
         shares: 12,
+        price: 200,
         tradeType: "buy",
       },
       TradeTypes: TradeTypes.inList,
@@ -36,13 +44,14 @@ exports.addTrade = (req, res) => {
       return TradeService.addTrade(
         user.portfolio,
         ticker_symbol,
-        Number(shares),
+        shares,
+        price,
         tradeType
       );
     })
     .then((result) => {
       let msg = result ? "Trade Added Successfully" : "Please try again, later";
-      res.send({ isAdded: result, msg: msg });
+      res.send({ isAdded: result != null, trade: result, msg: msg });
     })
     .catch((err) => {
       console.error(err);
@@ -55,7 +64,9 @@ exports.addTrade = (req, res) => {
           .status(400)
           .json({ errMsg: "Please send the Correct details of ticker_symbol" });
       } else if (err.message === "no_user_found_with_given_mail") {
-        res.status(400).json({ errMsg: "No user data found for the given mailId" });
+        res
+          .status(400)
+          .json({ errMsg: "No user data found for the given mailId" });
       } else {
         res.status(500).json({ errMsg: "Internal Server errror" });
       }
@@ -63,23 +74,83 @@ exports.addTrade = (req, res) => {
 };
 
 exports.updateTrade = (req, res) => {
-  const ticker_symbol = req.params.ticker_symbol;
-  const shares = req.body.shares;
   const email = req.body.email;
+  const shares = req.body.shares;
+  const trade_id = req.params.trade_id;
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({
       errors: errors.array(),
       errormsg: "Please send required Details",
-      "Required fields": ["shares"],
+      "Required fields": ["email", "shares"],
       "sample Format": {
-        shares: "12",
+        email: "TestEmail@mail.com",
+        shares: 12,
       },
     });
   }
+
+  let resData = {};
+  UserService.getUserByEmail(email)
+    .then((user) => {
+      if (user === null || user === undefined) {
+        throw new Error("no_user_found_with_given_mail");
+      }
+      resData.user = user;
+      return TradeService.updateTrade(trade_id, shares);
+    })
+    .then((result) => {
+      let msg = result
+        ? "Trade updated Successfully"
+        : "Please try again, later";
+      res.send({ isUpdated: result != null, msg: msg });
+    })
+    .catch((err) => {
+      console.error(err);
+      if (err.message === "Invalid_trade_id") {
+        res.status(400).json({ errMsg: "Invalid tradeId" });
+      } else if (err.message === "Insufficient_id_length") {
+        res.status(400).json({
+          errMsg:
+            "Trade_id sent must be a single String of 12 bytes or a string of 24 hex characters",
+        });
+      } else if (err.message === "Not_enough_shares") {
+        res
+          .status(400)
+          .json({ errMsg: "Not Enough share in portfolio to sell" });
+      } else if (err.message === "no_user_found_with_given_mail") {
+        res
+          .status(400)
+          .json({ errMsg: "No user data found for the given mailId" });
+      } else {
+        res.status(500).json({ errMsg: "Internal Server errror" });
+      }
+    });
 };
 
 exports.deleteTrade = (req, res) => {
-  const ticker_symbol = req.params.ticker_symbol;
+  const trade_id = req.params.trade_id;
+
+  console.log(trade_id.length);
+  TradeService.deleteTrade(trade_id)
+    .then((result) => {
+      let msg = result
+        ? "Trade deleted Successfully"
+        : "Please try again, later";
+      res.send({ isTradeDeleted: result, msg: msg });
+    })
+    .catch((err) => {
+      console.error(err);
+      if (err.message === "Invalid_trade_id") {
+        res.status(400).json({ errMsg: "Invalid tradeId" });
+      } else if (err.message === "Insufficient_id_length") {
+        res.status(400).json({
+          errMsg:
+            "Trade_id sent must be a single String of 12 bytes or a string of 24 hex characters",
+        });
+      } else {
+        res.status(500).json({ errMsg: "Internal Server errror" });
+      }
+    });
 };

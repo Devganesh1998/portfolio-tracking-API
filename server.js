@@ -32,6 +32,7 @@ app.use("/", apiRoutes);
 
 mongoose.Promise = require("bluebird");
 
+mongoose.set('useCreateIndex', true)
 mongoose
   .connect(process.env.MONGOURI, {
     useNewUrlParser: true,

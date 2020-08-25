@@ -9,6 +9,11 @@ const tradeSchema = mongoose.Schema(
       ref: "Portfolio",
       required: true,
     },
+    portfolioUnit: {
+      type: Schema.Types.ObjectId,
+      ref: "PortfolioUnit",
+      required: true,
+    },
     ticker_symbol: {
       type: String,
       required: true,
@@ -34,7 +39,7 @@ const tradeSchema = mongoose.Schema(
   }
 );
 
-tradeSchema.index({ portfolio: 1 });
+tradeSchema.index({ portfolioUnit: 1 });
 
 const Trade = mongoose.model("Trade", tradeSchema);
 
