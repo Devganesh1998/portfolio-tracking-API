@@ -75,11 +75,14 @@ exports.register = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.message === "email_already_taken") {
-        res
-          .status(400)
-          .json({ errMsg: "Given Mail is already Taken by another user" });
+        res.status(400).json({
+          errMsg: "Given Mail is already Taken by another user",
+          isRegisterSuccess: false,
+        });
       } else {
-        res.status(500).json({ errMsg: "Internal Server errror" });
+        res
+          .status(500)
+          .json({ errMsg: "Internal Server errror", isRegisterSuccess: false });
       }
     });
 };
@@ -107,6 +110,10 @@ exports.login = (req, res) => {
       const payload = {
         email: email,
       };
+      console.log(result);
+      if (!result) {
+        throw new Error("login_failed");
+      }
       return setCookieJWT(res, payload);
     })
     .then((result) => {
@@ -130,7 +137,13 @@ exports.login = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ errMsg: "Internal Server errror" });
+      if (err.message === "login_failed") {
+        res
+          .status(400)
+          .json({ isLoginSuccess: false, errMsg: "Invalid email or password" });
+      } else {
+        res.status(500).json({ errMsg: "Internal Server errror" });
+      }
     });
 };
 

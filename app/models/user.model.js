@@ -42,13 +42,14 @@ userSchema.statics.isEmailTaken = async function (email) {
 
 // To validate the hased password
 userSchema.methods.isPasswordMatch = async function (password) {
-  const user = this;
-  return bcrypt.compare(password, user.password, (err, result) => {
-    if (err) {
-      throw new Error("Hashing failed");
-    }
+  try {
+    const user = this;
+    result = await bcrypt.compare(password, user.password);
     return result;
-  });
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
 };
 
 const User = mongoose.model("User", userSchema);

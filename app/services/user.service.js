@@ -6,19 +6,16 @@ exports.createUser = async (name, email, password) => {
   if (await User.isEmailTaken(email)) {
     throw new Error("email_already_taken");
   }
-  let user;
-  bcrypt.hash(password, 10, async (err, hash) => {
-    if (err) {
-      console.error(err);
-      throw new Error("Hashing failed");
-    }
-    const portfolio = await portfolioService.createPortfolio(name);
-    user = await User.create({
-      name: name,
-      email: email,
-      password: hash,
-      portfolio: portfolio._id,
-    });
+
+  const [hash, portfolio] = await Promise.all([
+    bcrypt.hash(password, 10),
+    portfolioService.createPortfolio(name),
+  ]);
+  const user = await User.create({
+    name: name,
+    email: email,
+    password: hash,
+    portfolio: portfolio._id,
   });
   return user;
 };
@@ -26,7 +23,8 @@ exports.createUser = async (name, email, password) => {
 exports.validateUser = async (email, password) => {
   try {
     const user = await User.findOne({ email: email });
-    return user.isPasswordMatch(password);
+    const result = await user.isPasswordMatch(password);
+    return result;
   } catch (error) {
     console.error(error);
   }
