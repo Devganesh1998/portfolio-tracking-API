@@ -83,11 +83,11 @@ const updatePortfolioForSharesSold = async (
   shares_sold
 ) => {
   try {
-    const portfolioUnit = await PortfolioUnit.find({
+    const portfolioUnit = await PortfolioUnit.findOne({
       portfolio: portfolio_id,
       ticker_symbol: ticker_symbol,
     });
-    if (!portfolioUnit.length) {
+    if (portfolioUnit) {
       await PortfolioUnit.findByIdAndUpdate(portfolioUnit._id, {
         $set: {
           shares: portfolioUnit.shares - shares_sold,
@@ -104,13 +104,14 @@ const updatePortfolioForSharesSold = async (
 };
 
 exports.addTrade = async (portfolio_id, ticker_symbol, shares, tradeType) => {
-  try {
+  const portfolioUnit = await PortfolioUnit.findOne({
+    portfolio: portfolio_id,
+    ticker_symbol: ticker_symbol,
+  });
+
+  if (portfolioUnit) {
     // checking if available Shares is less than requested trade-shares to sell
     if (tradeType === tradeTypes.enum.SELL) {
-      const portfolioUnit = await PortfolioUnit.find({
-        portfolio: portfolio_id,
-        ticker_symbol: ticker_symbol,
-      });
       if (portfolioUnit.shares < shares) {
         throw new Error("Not_enough_shares");
       }
@@ -127,10 +128,28 @@ exports.addTrade = async (portfolio_id, ticker_symbol, shares, tradeType) => {
     } else if (tradeType === tradeTypes.enum.SELL) {
       await updatePortfolioForSharesSold(portfolio_id, ticker_symbol, shares);
     }
-    return true;
-  } catch (error) {
-    console.error(error);
-    return false;
+    return trade;
+  } else {
+    if (tradeType === tradeTypes.enum.SELL) {
+      throw new Error("Not_enough_shares");
+    }
+    const [trade, portfolioUnit] = await Promise.all([
+      Trade.create({
+        portfolio: portfolio_id,
+        ticker_symbol: ticker_symbol,
+        price: 100,
+        shares: shares,
+        type: tradeType,
+      }),
+      PortfolioUnit.create({
+        portfolio: portfolio_id,
+        ticker_symbol: ticker_symbol,
+        average_buy_price: 100,
+        shares: shares,
+        type: tradeType,
+      }),
+    ]);
+    return trade;
   }
 };
 

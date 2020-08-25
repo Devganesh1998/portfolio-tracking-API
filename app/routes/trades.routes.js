@@ -9,15 +9,20 @@ router.post(
   [
     body("email").exists().bail().isEmail().bail().trim(),
     body("ticker_symbol").exists().bail().trim(),
-    body("shares").exists().bail().trim(),
+    body("shares").exists(),
     body("tradeType").exists().bail().trim().custom(tradeTypeValidator),
   ],
   tradesController.addTrade
 );
 
 router.put(
-  "/:ticker_symbol",
-  [body("shares").exists().bail().trim()],
+  "/",
+  [
+    body("email").exists().bail().isEmail().bail().trim(),
+    body("ticker_symbol").exists().bail().trim(),
+    body("shares").exists().bail().trim(),
+    body("tradeType").exists().bail().trim().custom(tradeTypeValidator),
+  ],
   tradesController.updateTrade
 );
 

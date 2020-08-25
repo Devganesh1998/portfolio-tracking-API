@@ -3,7 +3,7 @@ const userService = require("../services/user.service");
 
 exports.register = (req, res) => {
   const email = req.body.email;
-  const pasword = req.body.pasword;
+  const password = req.body.password;
   const name = req.body.name;
 
   const errors = validationResult(req);
@@ -11,17 +11,17 @@ exports.register = (req, res) => {
     return res.status(400).json({
       errors: errors.array(),
       errormsg: "Please send required Details",
-      "Required fields": ["email", "pasword", "name"],
+      "Required fields": ["email", "password", "name"],
       "sample Format": {
         email: "TestEmail@mail.com",
-        pasword: "testPassword",
+        password: "testPassword",
         name: "testName",
       },
     });
   }
 
   userService
-    .createUser(name, email, pasword)
+    .createUser(name, email, password)
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.message === "email_already_taken") {
@@ -36,23 +36,23 @@ exports.register = (req, res) => {
 
 exports.login = (req, res) => {
   const email = req.body.email;
-  const pasword = req.body.pasword;
+  const password = req.body.password;
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({
       errors: errors.array(),
       errormsg: "Please send required Details",
-      "Required fields": ["email", "pasword"],
+      "Required fields": ["email", "password"],
       "sample Format": {
         email: "TestEmail@mail.com",
-        pasword: "testPassword",
+        password: "testPassword",
       },
     });
   }
 
   userService
-    .validateUser(email, pasword)
+    .validateUser(email, password)
     .then((result) => res.send({ isAuthenticated: result }))
     .catch((err) => {
       console.error(err);
